@@ -1,0 +1,114 @@
+Of course. A Product Requirements Document (PRD) is an essential artifact for defining a project's purpose, features, and functionality. It serves as a guide for engineering, design, and quality assurance.
+
+Here is a detailed PRD for the Data Analyst Agent project, structured as a professional software development document.
+
+---
+
+### **Product Requirements Document: Data Analyst Agent API**
+
+| **Version** | **Date**       | **Author**             | **Status** |
+| :---------- | :------------- | :--------------------- | :--------- |
+| 1.0         | August 9, 2025 | Gemini Product Manager | Final      |
+
+### 1. Introduction & Vision
+
+The Data Analyst Agent API is a headless service designed to provide on-demand, programmatic data analysis. The core vision is to create an "AI Data Analyst" that can be invoked via a simple API call. This agent will autonomously understand a given task, source and prepare the necessary data (from the web, attached files, or remote databases), perform complex analysis, generate visualizations, and return structured, machine-readable results. This product democratizes data analysis, allowing developers to embed powerful data intelligence into their applications without needing to write or maintain complex data science code.
+
+### 2. Problem Statement
+
+Performing ad-hoc data analysis is a time-consuming and expertise-driven process. Developers and systems often need to answer specific data-driven questions programmatically, but the logic required can be complex and dynamic. For example, analyzing a new dataset, scraping a web page for insights, or creating a statistical plot requires custom code for each unique task. This creates a bottleneck, slowing down development and limiting the ability of applications to respond to data dynamically.
+
+There is a need for a unified, intelligent API endpoint that can accept any data analysis task and return a structured answer, effectively outsourcing the "how" of data analysis to an AI agent.
+
+### 3. Goals & Objectives
+
+*   **P0: Fulfill Core Task Requirements:** The primary goal is to deliver an API that can successfully accept and process the tasks as defined in the project specification, including web scraping, remote database queries, and file-based analysis.
+*   **P0: Ensure Performance & Reliability:** The API must consistently return a response within the **3-minute (180-second)** time limit. It must be robust, handling errors gracefully and providing informative error messages.
+*   **P1: Achieve High Accuracy:** The agent's analysis must be correct. Calculations, statistical measures, and data extraction must be accurate to pass the project's evaluation rubric.
+*   **P1: Generalize Beyond Samples:** The agent's architecture must be flexible and not hard-coded to the provided examples. It must be able to dynamically generate logic for unseen questions and datasets.
+*   **P2: Establish a Maintainable Framework:** The solution should be well-structured, containerized, and documented to allow for easy deployment and future enhancements.
+
+### 4. User Persona
+
+The primary user of this API is a **Developer** or a **System Integrator**.
+
+*   **Needs:** They need a simple, reliable, and well-documented API endpoint. They want to send a task and get a predictable, structured JSON response back. They are not concerned with the internal complexity of the agent.
+*   **Motivations:** They are motivated by speed and efficiency. They want to add data analysis capabilities to their application without building a data science team or writing brittle, custom analysis scripts.
+*   **Pain Points:** Their current pain point is the time and effort required to manually code data analysis pipelines for each new requirement.
+
+### 5. Functional Requirements
+
+| ID    | Requirement                          | Description                                                                                                                                                                                                                                                                                                    |
+| :---- | :----------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **FR-1** | **API Endpoint**                     | The system shall expose a single `POST /api/` endpoint that accepts `multipart/form-data` requests.                                                                                                                                                                                                                 |
+| **FR-2** | **Request Handling**                 | The endpoint must accept a mandatory file field named `questions.txt`. It must also accept zero or more additional file attachments of various types (e.g., `.csv`, `.png`).                                                                                                                                         |
+| **FR-3** | **Agentic Planning**                 | Upon receiving a task, the agent **must** first generate a step-by-step plan. This plan will decompose the user's request into a logical sequence of actions that can be executed by a tool. The plan shall be machine-readable (e.g., JSON).                                                                         |
+| **FR-4** | **Tool-Based Execution**             | The agent must execute its plan using a set of pre-defined, robust tools. These tools include, at a minimum: `load_and_clean_data`, `answer_question`, and `generate_plot`. The agent's primary role is to orchestrate these tools.                                                                                   |
+| **FR-5** | **Multi-Source Data Ingestion**      | The agent must be able to ingest data from multiple sources as directed by the task: <br>- **Web Scraping:** Fetch and parse HTML tables from public URLs. <br>- **File Uploads:** Process data from files sent in the request body. <br>- **Remote Databases:** Execute DuckDB queries against remote Parquet files (e.g., on S3). |
+| **FR-6** | **Comprehensive Data Cleaning**      | The `load_and_clean_data` tool must perform robust cleaning, including: handling multi-level column headers, stripping special characters and references (e.g., `[a]`, `[1]`) from column names, and converting data values to appropriate types (numeric, datetime).                                              |
+| **FR-7** | **Dynamic Code Generation**          | The `answer_question` and `generate_plot` tools must use the LLM to generate small, specific Python code snippets on the fly to perform the required analysis on the already-cleaned data.                                                                                                                        |
+| **FR-8** | **Advanced Visualization**           | The agent must be able to generate visualizations (e.g., scatterplots) with specific styling requirements (e.g., a "dotted red regression line"). Plots must be returned as a base64-encoded data URI string and be under 100,000 bytes.                                                                            |
+| **FR-9** | **Structured Response Formatting** | The API's final output must be a single JSON payload. The structure of this payload (e.g., a JSON array of values, a JSON object of key-value pairs) must precisely match the format requested in `questions.txt`.                                                                                             |
+
+### 6. Non-Functional Requirements
+
+| ID     | Requirement   | Description                                                                                                                                                                   |
+| :----- | :------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **NFR-1** | **Performance** | The end-to-end processing time for any request must not exceed **180 seconds**. The internal application logic should have a shorter timeout (e.g., 175s) to ensure a timely response. |
+| **NFR-2** | **Reliability**   | The API must be highly available. It must handle errors gracefully (e.g., invalid URL, unparseable data, tool failure) and return appropriate HTTP status codes (4xx/5xx) with a descriptive JSON error body. |
+| **NFR-3** | **Security**      | All external API keys (e.g., for Gemini) must be managed securely via environment variables or a secrets management system. They must not be hard-coded in the source.       |
+| **NFR-4** | **Scalability**   | The application must be stateless and packaged in a Docker container. This allows for horizontal scaling via cloud platforms like Google Cloud Run or Render.                    |
+| **NFR-5** | **Maintainability** | The code must be well-structured with a clear separation of concerns (e.g., API layer in `main.py`, agent logic in `agent.py`).                                         |
+
+### 7. API Specification
+
+*   **Endpoint:** `POST /api/`
+*   **Request Format:**
+    *   `Content-Type: multipart/form-data`
+    *   **Parts:**
+        *   `questions.txt`: (Required) A file containing the natural language description of the data analysis task.
+        *   `[filename]`: (Optional) Zero or more additional files (e.g., `data.csv`, `image.png`). The form field name can be the filename itself.
+*   **Response Format (Success):**
+    *   `HTTP Status Code: 200 OK`
+    *   `Content-Type: application/json`
+    *   **Body:** A JSON Array or JSON Object, as specified by the task.
+        *   *Example (Array):* `[1, "Titanic", 0.485, "data:image/png;base64,..."]`
+        *   *Example (Object):* `{"Most cases (2019-2022)": "Bombay High Court", ...}`
+*   **Response Format (Error):**
+    *   `HTTP Status Code: 4xx or 5xx`
+    *   `Content-Type: application/json`
+    *   **Body:** `{"detail": "A clear, descriptive error message"}`
+        *   *Example (400):* `{"detail": "Mandatory file 'questions.txt' not found."}`
+        *   *Example (500):* `{"detail": "Agent failed on step 2: Could not find column 'revenue'."}`
+        *   *Example (504):* `{"detail": "The analysis task took too long to complete (>175s)."}`
+
+### 8. System Architecture (Planner-Executor Model)
+
+The agent operates on a **Planner-Executor** model to ensure robustness and observability.
+
+1.  **API Layer (FastAPI):** Receives the `multipart/form-data` request and forwards the task to the agent.
+2.  **Agent Orchestrator (`run` method):**
+    a.  **Planning:** Sends the user's request to the LLM to generate a structured, multi-step plan in JSON format.
+    b.  **Execution:** Iterates through the plan, step by step.
+    c.  **Tool Dispatch:** For each step, it calls the appropriate internal, hardened tool (e.g., `_tool_load_and_clean_data`).
+3.  **Tool Layer:**
+    a.  **Data Loading Tool:** A robust, hand-coded function for scraping and cleaning data. This step is too critical and complex to be reliably generated by an LLM on the fly. It places the cleaned DataFrame into the agent's memory (`self.state['df']`).
+    b.  **Analysis/Plotting Tools:** These tools receive a specific, narrow question and the pre-cleaned DataFrame. They use the LLM to generate a *small, targeted snippet of code* to answer only that question. The snippet is executed, and the result is captured.
+4.  **Result Aggregation:** The orchestrator collects the result from each tool execution and formats them into the final JSON response.
+
+
+
+### 9. Success Metrics
+
+*   **Primary Metric:** Pass rate on the final evaluation rubric. **Target: >= 90%**
+*   **Secondary Metrics:**
+    *   API Uptime: **Target: > 99.9%**
+    *   Average Request Latency: **Target: < 150 seconds**
+    *   Agent Task Completion Rate (without human intervention): **Target: > 95%**
+
+### 10. Future Work (Out of Scope for v1.0)
+
+*   **Self-Healing Planner:** The current agent fails if the *planning* step does not produce valid JSON. A future version could implement a retry loop for the planner itself.
+*   **Expanded Toolset:** Add new tools for other data sources (Excel, SQL databases), file formats, or more advanced statistical models (e.g., classification, clustering).
+*   **Caching Layer:** Implement a caching mechanism (e.g., Redis) to store results for identical requests, reducing latency and cost.
+*   **User-Facing UI:** Build a simple web application on top of the API to allow non-developers to use the agent.
