@@ -423,7 +423,7 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(description='Test Data Analyst Agent with Indian High Courts Dataset')
-    parser.add_argument('--url', default='http://localhost:8000/api/', 
+    parser.add_argument('--url', default='https://p2-y6wv.onrender.com/api/', 
                        help='API endpoint URL (default: http://localhost:8000/api/)')
     parser.add_argument('--verbose', '-v', action='store_true',
                        help='Enable verbose output')

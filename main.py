@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 import uvicorn
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Request
-from fastapi.responses import Response
+from fastapi.responses import Response,JSONResponse
 import google.generativeai as genai
 load_dotenv()
 # --- Configuration ---
@@ -29,7 +29,15 @@ app = FastAPI(
     description="An API that uses Google's Gemini model to autonomously perform data analysis.",
 )
 
-
+@app.get("/health", tags=["System"])
+async def health_check():
+    """
+    A simple health check endpoint to confirm the API is running.
+    """
+    return JSONResponse(
+        status_code=200,
+        content={"status": "ok", "message": "Data Analyst Agent is running."}
+    )
 # --- Core Agent Logic ---
 
 def execute_code(code_to_run: str, files: Dict[str, bytes]) -> Tuple[str, str]:
