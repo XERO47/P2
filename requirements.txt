@@ -1,0 +1,39 @@
+# -- Core Application & Web Server --
+# These libraries are essential for running the FastAPI application itself.
+fastapi
+uvicorn        # The ASGI server to run FastAPI
+python-multipart  # Required for FastAPI to handle form data and file uploads
+gunicorn         # A production-grade web server, recommended for deployment
+
+# -- LLM Client --
+# The specific library to interact with Google's Gemini models.
+google-generativeai
+
+# -- Agent's Core Data Analysis Toolbox --
+# The fundamental libraries for any data science task.
+pandas            # The primary library for data manipulation and analysis (DataFrames)
+numpy            # The foundational package for numerical computation in Python
+scikit-learn      # For machine learning tasks: regression, classification, clustering, etc.
+scipy           # For scientific and technical computing (stats, optimization, etc.)
+
+# -- Data Visualization --
+# For creating plots and charts as requested by the user.
+matplotlib       # The primary and most flexible plotting library
+seaborn          # A high-level interface for drawing attractive statistical graphics
+
+# -- Web Scraping & API Interaction --
+# For sourcing data from websites or external APIs.
+requests        # The standard for making HTTP requests
+beautifulsoup4 # For parsing HTML and XML documents (web scraping)
+lxml             # A high-performance parser that BeautifulSoup4 can use
+
+# -- Data Format & File Handling --
+# For reading and writing various common data formats the agent might encounter.
+openpyxl         # Allows pandas to read and write Excel 2010+ (.xlsx) files
+pyarrow         # High-performance library for in-memory data and reading Parquet files
+fastparquet  # Another engine for reading Parquet files; good to have both available
+s3fs          # Allows pandas to directly read from S3 buckets (e.g., pd.read_parquet('s3://...'))
+
+# -- Image Processing Utility --
+# For handling image data, such as validation or manipulation before base64 encoding.
+Pillow
