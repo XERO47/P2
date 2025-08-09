@@ -308,8 +308,8 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(description='Test the Data Analyst Agent')
-    parser.add_argument('--url', default='http://localhost:8000/api/', 
-                       help='API endpoint URL (default: http://localhost:5000/api/)')
+    parser.add_argument('--url', default='https://p2-y6wv.onrender.com/api/', 
+                       help='API endpoint URL (default: https://p2-y6wv.onrender.com/api/)')
     parser.add_argument('--verbose', '-v', action='store_true',
                        help='Enable verbose output')
     

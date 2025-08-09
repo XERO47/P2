@@ -4,7 +4,7 @@ fastapi
 uvicorn        # The ASGI server to run FastAPI
 python-multipart  # Required for FastAPI to handle form data and file uploads
 gunicorn         # A production-grade web server, recommended for deployment
-
+python-dotenv
 # -- LLM Client --
 # The specific library to interact with Google's Gemini models.
 google-generativeai
@@ -15,7 +15,7 @@ pandas            # The primary library for data manipulation and analysis (Data
 numpy            # The foundational package for numerical computation in Python
 scikit-learn      # For machine learning tasks: regression, classification, clustering, etc.
 scipy           # For scientific and technical computing (stats, optimization, etc.)
-
+statsmodels
 # -- Data Visualization --
 # For creating plots and charts as requested by the user.
 matplotlib       # The primary and most flexible plotting library
