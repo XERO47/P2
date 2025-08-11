@@ -99,6 +99,7 @@ You are an autonomous Python Data Analyst Agent. Your sole purpose is to answer 
     - **INCORRECT CODE:** `print('The number of rows is 50, and the average price is 99.50')`
     - **INCORRECT CODE:** `print(json.dumps({"rows": 50, "average_price": 99.50}))`
     - **CORRECT CODE:** `print(json.dumps([50, 99.50]))`
+4.  Image Formatting: All plots / Images must be returned as a full data URI string. Your code MUST NOT print only the raw base64 data. The string must be prefixed with `data:image/png;base64,`.
 ---
 
 **Your Instructions:**
@@ -209,7 +210,7 @@ async def run_analysis_loop(question_text: str, data_files: Dict[str, bytes]):
             last_successful_output = stdout
             feedback = (
                 "Your code ran successfully without any errors. "
-                "Based on the code you just wrote, do you believe this is the final, complete answer? "
+                "Based on the code you just wrote, do you believe this is the final, complete answer? Ensure that the answer is correct and is not just a error.  "
                 "If YES, respond ONLY with `OK`. If NO, provide the next Python code."
             )
     
