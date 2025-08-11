@@ -6,11 +6,12 @@ import tempfile
 import asyncio  # <-- Import asyncio
 from typing import List, Dict, Tuple
 from dotenv import load_dotenv
-
+from google.generativeai.types import HarmCategory, HarmBlockThreshold
 import uvicorn
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Request
 from fastapi.responses import Response, JSONResponse
 import google.generativeai as genai
+from google.genai import types
 
 load_dotenv()
 
@@ -101,7 +102,8 @@ You are an autonomous Python Data Analyst Agent. Your sole purpose is to answer 
 ---
 
 **Your Instructions:**
-1.  You will be given a question and a list of available data files.
+1.  You will be given a question and a list of available data files.  
+    Before writing code, infer the column names from the data file provided.
 2.  You MUST write Python code to answer the question, strictly following the output format rules above.
 3.  You can use common data science libraries like `pandas`, `numpy`, `scikit-learn`, `matplotlib`, `requests`, `beautifulsoup4`. They are pre-installed.
 4.  If you need to generate a plot, save it to a file (e.g., `plot.png`) and then print its base64-encoded data URI to stdout.
@@ -111,14 +113,27 @@ You are an autonomous Python Data Analyst Agent. Your sole purpose is to answer 
         - If YES, respond with `OK`.
         - If NO (e.g., more steps are needed), provide the **next** Python code block.
 6.  Do not add any explanations or comments. Your response must be either a Python code block or the word `OK`.
+7.  DON'T ASSUME ANYTHING GET EVERTHING AS YOU NEED.
 """
 
 async def run_analysis_loop(question_text: str, data_files: Dict[str, bytes]):
     """
-    This function contains the core agent logic and is designed to be cancellable.
+    This function contains the core agent logic with robust error handling for all API responses.
     """
     file_list_str = ", ".join(data_files.keys()) if data_files else "None"
-    model = genai.GenerativeModel(LLM_MODEL, system_instruction=get_system_prompt())
+    
+    safety_settings = [
+        {"category": HarmCategory.HARM_CATEGORY_HARASSMENT, "threshold": HarmBlockThreshold.BLOCK_NONE},
+        {"category": HarmCategory.HARM_CATEGORY_HATE_SPEECH, "threshold": HarmBlockThreshold.BLOCK_NONE},
+        {"category": HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, "threshold": HarmBlockThreshold.BLOCK_NONE},
+        {"category": HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, "threshold": HarmBlockThreshold.BLOCK_NONE},
+    ]
+
+    model = genai.GenerativeModel(
+        LLM_MODEL, 
+        system_instruction=get_system_prompt(),
+        safety_settings=safety_settings
+    )
     chat = model.start_chat(history=[])
     
     initial_prompt = f"Here is my question:\n---\n{question_text}\n---\nAvailable data files: [{file_list_str}]"
@@ -127,13 +142,47 @@ async def run_analysis_loop(question_text: str, data_files: Dict[str, bytes]):
 
     for i in range(MAX_ITERATIONS):
         print(f"--- Iteration {i+1} ---")
+        llm_response = "" # Initialize empty response string
 
-        # Use the async version of the LLM call
-        response = await chat.send_message_async(feedback)
-        llm_response = response.text
-        
+        try:
+            response = await chat.send_message_async(feedback)
+
+            # --- NEW: ROBUST RESPONSE PARSING TO HANDLE MULTI-PART RESPONSES ---
+            # This logic replaces the fragile `response.text` accessor.
+
+            if not response.parts:
+                print("❌ LLM response was empty or blocked (likely a safety filter).")
+                feedback = (
+                    "Your previous response was blocked. Please analyze the original request again and provide the Python script."
+                )
+                continue
+
+            # Iterate through all parts and safely concatenate their text content.
+            # This correctly handles both single-part and multi-part responses.
+            response_parts = []
+            for part in response.parts:
+                try:
+                    # Each part should have a 'text' attribute.
+                    response_parts.append(part.text)
+                except ValueError:
+                    # This part might not be text, so we'll log it and skip.
+                    print(f"⚠️ Skipping a non-text part in the LLM response: {part}")
+                    continue
+            
+            llm_response = "".join(response_parts)
+            # --- END OF NEW PARSING LOGIC ---
+
+        except Exception as e:
+            print(f"❌ An unexpected error occurred during the Gemini API call: {e}")
+            raise HTTPException(status_code=500, detail=f"LLM API call failed: {str(e)}")
+
+        if not llm_response:
+             print("⚠️ LLM response was parsed but resulted in an empty string. Asking agent to retry.")
+             feedback = "Your previous response was empty after parsing. Please try generating the Python code again."
+             continue
+
         if llm_response.strip().upper() == "OK":
-            print("LLM signaled completion. Responding with last successful output.")
+            print("✅ LLM signaled completion. Responding with last successful output.")
             if last_successful_output:
                 return Response(content=last_successful_output, media_type="application/json")
             else:
@@ -145,12 +194,16 @@ async def run_analysis_loop(question_text: str, data_files: Dict[str, bytes]):
             continue
 
         print(f"Executing code:\n{code[:350]}...")
-        # Await the new async execute_code function
         stdout, stderr = await execute_code(code, data_files)
 
         if stderr:
             print(f"Execution Error: {stderr}")
-            feedback = f"Your code produced an error. You MUST fix it.\nError:\n---\n{stderr}\n---\nProvide the full, corrected Python code."
+            last_error_line = stderr.strip().split('\n')[-1]
+            feedback = (
+                f"Your code produced an error. You MUST fix it.\n"
+                f"The specific error was: `{last_error_line}`\n"
+                f"Please analyze this error and provide the full, corrected Python script."
+            )
         else:
             print(f"Execution Success. Output:\n{stdout[:350]}...")
             last_successful_output = stdout
