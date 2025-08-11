@@ -11,7 +11,7 @@ import uvicorn
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Request
 from fastapi.responses import Response, JSONResponse
 import google.generativeai as genai
-from google.genai import types
+from google.generativeai import types
 
 load_dotenv()
 
