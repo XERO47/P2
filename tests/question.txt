@@ -1,0 +1,3 @@
+How many cats in the picture.
+
+reponse in a single json substring!

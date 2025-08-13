@@ -7,7 +7,7 @@ gunicorn         # A production-grade web server, recommended for deployment
 python-dotenv
 # -- LLM Client --
 # The specific library to interact with Google's Gemini models.
-google-generativeai
+google-genai
 
 # -- Agent's Core Data Analysis Toolbox --
 # The fundamental libraries for any data science task.
