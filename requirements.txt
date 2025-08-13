@@ -26,7 +26,7 @@ seaborn          # A high-level interface for drawing attractive statistical gra
 requests        # The standard for making HTTP requests
 beautifulsoup4 # For parsing HTML and XML documents (web scraping)
 lxml             # A high-performance parser that BeautifulSoup4 can use
-
+networkx
 # -- Data Format & File Handling --
 # For reading and writing various common data formats the agent might encounter.
 openpyxl         # Allows pandas to read and write Excel 2010+ (.xlsx) files
