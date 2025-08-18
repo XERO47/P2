@@ -10,4 +10,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping the URL
-        run: curl -sS https://your-url-to-ping.com > /dev/null
+        run: curl -sS https://p2-y6wv.onrender.com/health/  > /dev/null
