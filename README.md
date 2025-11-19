@@ -1,4 +1,4 @@
-```markdown
+
 # Data Analyst Agent – Autonomous Python Executor with Image Support
 
 A FastAPI micro-service that turns plain-English questions into answers by letting **Gemini 2.5 Flash** write, run, and debug its own Python code.  
@@ -126,4 +126,4 @@ Possible response
 ## 📄 License
 
 MIT – feel free to embed in larger products.
-```
+
